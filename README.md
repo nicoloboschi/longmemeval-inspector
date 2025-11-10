@@ -1,6 +1,12 @@
 # LongMemEval Inspector
 
+**[🔍 Open the Interactive Inspector →](https://nicoloboschi.github.io/longmemeval-inspector/inspector.html)**
+
 This repository contains an indexed version of the [LongMemEval benchmark dataset](https://github.com/Bingsu-Org/LongMemEval) with visualization tools for debugging purposes.
+
+## Dataset Source
+
+The dataset used in this inspector comes from the [LongMemEval cleaned dataset](https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/main/longmemeval_s_cleaned.json) on HuggingFace.
 
 ## Purpose
 
