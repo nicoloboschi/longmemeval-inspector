@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LongMemEval Inspector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .stats {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .controls {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .question-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+            gap: 20px;
+        }
+
+        .question-meta {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .badge-type {
+            background: #3498db;
+            color: white;
+        }
+
+        .badge-id {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .badge-date {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .question-text {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .answer-section {
+            background: #e8f5e9;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            border-left: 4px solid #4caf50;
+        }
+
+        .answer-label {
+            font-weight: 600;
+            color: #2e7d32;
+            margin-bottom: 5px;
+        }
+
+        .answer-text {
+            color: #1b5e20;
+        }
+
+        .sessions-section {
+            margin-top: 15px;
+        }
+
+        .sessions-header {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .session {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .message:last-child {
+            margin-bottom: 0;
+        }
+
+        .message-user {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+        }
+
+        .message-assistant {
+            background: #fff3e0;
+            border-left: 4px solid #ff9800;
+        }
+
+        .message-role {
+            font-weight: 600;
+            margin-bottom: 5px;
+            text-transform: capitalize;
+        }
+
+        .message-user .message-role {
+            color: #1976d2;
+        }
+
+        .message-assistant .message-role {
+            color: #f57c00;
+        }
+
+        .message-content {
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+
+        .has-answer {
+            background: #fff9c4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #f57f17;
+        }
+
+        .toggle-session {
+            background: #2196f3;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .toggle-session:hover {
+            background: #1976d2;
+        }
+
+        .show-full-conv {
+            background: #9c27b0;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            margin-left: 10px;
+        }
+
+        .show-full-conv:hover {
+            background: #7b1fa2;
+        }
+
+        .session-content {
+            margin-top: 10px;
+        }
+
+        .session-content.collapsed {
+            display: none;
+        }
+
+        .message.hidden {
+            display: none;
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f0f0f0;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .current-page {
+            padding: 8px 16px;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>LongMemEval Inspector</h1>
+            <div class="stats" id="stats">Loading...</div>
+        </header>
+
+        <div class="controls">
+            <input type="text" class="search-box" id="searchBox" placeholder="Search questions...">
+            <select class="filter-select" id="typeFilter">
+                <option value="">All Types</option>
+            </select>
+            <select class="filter-select" id="itemsPerPage">
+                <option value="10">10 per page</option>
+                <option value="25" selected>25 per page</option>
+                <option value="50">50 per page</option>
+                <option value="100">100 per page</option>
+            </select>
+        </div>
+
+        <div id="questions">
+            <div class="loading">Loading questions...</div>
+        </div>
+
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+
+    <script>
+        let allQuestions = [];
+        let filteredQuestions = [];
+        let currentPage = 1;
+        let itemsPerPage = 25;
+
+        async function loadData() {
+            try {
+                // Data is embedded in the HTML file
+                allQuestions = embeddedData;
+                filteredQuestions = allQuestions;
+
+                updateStats();
+                populateFilters();
+                renderQuestions();
+            } catch (error) {
+                document.getElementById('questions').innerHTML =
+                    '<div class="no-results">Error loading data: ' + error.message + '</div>';
+            }
+        }
+
+        function updateStats() {
+            const types = {};
+            allQuestions.forEach(q => {
+                types[q.question_type] = (types[q.question_type] || 0) + 1;
+            });
+
+            const typeStats = Object.entries(types)
+                .map(([type, count]) => `${type}: ${count}`)
+                .join(' | ');
+
+            document.getElementById('stats').textContent =
+                `Total Questions: ${allQuestions.length} | ${typeStats}`;
+        }
+
+        function populateFilters() {
+            const types = [...new Set(allQuestions.map(q => q.question_type))];
+            const typeFilter = document.getElementById('typeFilter');
+
+            types.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeFilter.appendChild(option);
+            });
+        }
+
+        function filterQuestions() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            const typeFilter = document.getElementById('typeFilter').value;
+
+            filteredQuestions = allQuestions.filter(q => {
+                const matchesSearch = !searchTerm ||
+                    (q.question && String(q.question).toLowerCase().includes(searchTerm)) ||
+                    (q.answer && String(q.answer).toLowerCase().includes(searchTerm)) ||
+                    (q.question_id && String(q.question_id).toLowerCase().includes(searchTerm));
+
+                const matchesType = !typeFilter || q.question_type === typeFilter;
+
+                return matchesSearch && matchesType;
+            });
+
+            currentPage = 1;
+            renderQuestions();
+        }
+
+        function renderQuestions() {
+            const questionsDiv = document.getElementById('questions');
+
+            if (filteredQuestions.length === 0) {
+                questionsDiv.innerHTML = '<div class="no-results">No questions found</div>';
+                document.getElementById('pagination').innerHTML = '';
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const pageQuestions = filteredQuestions.slice(startIndex, endIndex);
+
+            questionsDiv.innerHTML = pageQuestions.map((q, index) => `
+                <div class="question-card">
+                    <div class="question-header">
+                        <div class="question-meta">
+                            <span class="badge badge-id">${q.question_id}</span>
+                            <span class="badge badge-type">${q.question_type}</span>
+                            <span class="badge badge-date">${q.question_date}</span>
+                        </div>
+                    </div>
+
+                    <div class="question-text">${escapeHtml(q.question)}</div>
+
+                    <div class="answer-section">
+                        <div class="answer-label">Answer:</div>
+                        <div class="answer-text">${escapeHtml(q.answer)}</div>
+                    </div>
+
+                    <div class="sessions-section">
+                        <div class="sessions-header">
+                            <span>Haystack Sessions (${q.haystack_sessions.length})</span>
+                            ${q.haystack_sessions.length > 0 ?
+                                `<button class="toggle-session" onclick="toggleAllSessions(${startIndex + index})">
+                                    Toggle All
+                                </button>` : ''}
+                        </div>
+                        ${q.haystack_sessions.map((session, sessionIndex) => {
+                            const hasAnswerMessages = session.filter(m => m.has_answer).length;
+                            return `
+                            <div class="session">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <strong>Session ${sessionIndex + 1} (${hasAnswerMessages} with answer / ${session.length} total)</strong>
+                                    <div>
+                                        <button class="show-full-conv" onclick="toggleFullConversation(event, ${startIndex + index}, ${sessionIndex})">
+                                            Show Full Conv
+                                        </button>
+                                        <button class="toggle-session" onclick="toggleSession(${startIndex + index}, ${sessionIndex})">
+                                            Toggle
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="session-content" id="session-${startIndex + index}-${sessionIndex}">
+                                    ${session.map(message => `
+                                        <div class="message message-${message.role} ${!message.has_answer ? 'hidden' : ''}" data-has-answer="${message.has_answer}">
+                                            <div class="message-role">
+                                                ${message.role}
+                                                ${message.has_answer ? '<span class="has-answer">HAS ANSWER</span>' : ''}
+                                            </div>
+                                            <div class="message-content">${escapeHtml(message.content)}</div>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        `}).join('')}
+                    </div>
+                </div>
+            `).join('');
+
+            renderPagination();
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
+            const paginationDiv = document.getElementById('pagination');
+
+            if (totalPages <= 1) {
+                paginationDiv.innerHTML = '';
+                return;
+            }
+
+            paginationDiv.innerHTML = `
+                <button onclick="changePage(1)" ${currentPage === 1 ? 'disabled' : ''}>First</button>
+                <button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
+                <span class="current-page">Page ${currentPage} of ${totalPages}</span>
+                <button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next</button>
+                <button onclick="changePage(${totalPages})" ${currentPage === totalPages ? 'disabled' : ''}>Last</button>
+            `;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderQuestions();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function toggleSession(questionIndex, sessionIndex) {
+            const element = document.getElementById(`session-${questionIndex}-${sessionIndex}`);
+            element.classList.toggle('collapsed');
+        }
+
+        function toggleFullConversation(event, questionIndex, sessionIndex) {
+            const sessionElement = document.getElementById(`session-${questionIndex}-${sessionIndex}`);
+            const messages = sessionElement.querySelectorAll('.message[data-has-answer="false"]');
+
+            const allVisible = Array.from(messages).every(msg => !msg.classList.contains('hidden'));
+
+            messages.forEach(msg => {
+                if (allVisible) {
+                    msg.classList.add('hidden');
+                } else {
+                    msg.classList.remove('hidden');
+                }
+            });
+
+            // Update button text
+            const button = event.target;
+            if (allVisible) {
+                button.textContent = 'Show Full Conv';
+            } else {
+                button.textContent = 'Hide Full Conv';
+            }
+        }
+
+        function toggleAllSessions(questionIndex) {
+            const pageQuestions = filteredQuestions.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+            const question = pageQuestions[questionIndex % itemsPerPage];
+            const sessions = question.haystack_sessions;
+
+            const allCollapsed = sessions.every((_, sessionIndex) => {
+                const element = document.getElementById(`session-${questionIndex}-${sessionIndex}`);
+                return element && element.classList.contains('collapsed');
+            });
+
+            sessions.forEach((_, sessionIndex) => {
+                const element = document.getElementById(`session-${questionIndex}-${sessionIndex}`);
+                if (element) {
+                    if (allCollapsed) {
+                        element.classList.remove('collapsed');
+                    } else {
+                        element.classList.add('collapsed');
+                    }
+                }
+            });
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        document.getElementById('searchBox').addEventListener('input', filterQuestions);
+        document.getElementById('typeFilter').addEventListener('change', filterQuestions);
+        document.getElementById('itemsPerPage').addEventListener('change', (e) => {
+            itemsPerPage = parseInt(e.target.value);
+            currentPage = 1;
+            renderQuestions();
+        });
+
+        loadData();
+    </script>
+</body>
+</html>
