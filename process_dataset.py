@@ -28,7 +28,8 @@ def message_contains_answer(message_content: str, answer: str) -> bool:
     Returns:
         True if the message contains the answer, False otherwise
     """
-    return answer.lower() in message_content.lower()
+    # Convert both to strings and lowercase for comparison
+    return str(answer).lower() in str(message_content).lower()
 
 
 def add_has_answer_annotations(data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
@@ -56,15 +57,17 @@ def add_has_answer_annotations(data: List[Dict[str, Any]]) -> List[Dict[str, Any
         answer_session_ids = set(item.get('answer_session_ids', []))
         haystack_session_ids = item.get('haystack_session_ids', [])
         haystack_sessions = item.get('haystack_sessions', [])
+        haystack_dates = item.get('haystack_dates', [])
 
         # Filter to only keep sessions that contain the answer
-        filtered_sessions = []
+        processed_sessions = []
         for session_idx, session_id in enumerate(haystack_session_ids):
             if session_id in answer_session_ids and session_idx < len(haystack_sessions):
                 session = haystack_sessions[session_idx]
+                session_date = haystack_dates[session_idx] if session_idx < len(haystack_dates) else None
 
                 # Process each message in the session
-                processed_session = []
+                processed_messages = []
                 for message in session:
                     # Check if this message contains the answer
                     has_answer = message_contains_answer(message['content'], answer)
@@ -74,11 +77,16 @@ def add_has_answer_annotations(data: List[Dict[str, Any]]) -> List[Dict[str, Any
                         'content': message['content'],
                         'has_answer': has_answer
                     }
-                    processed_session.append(processed_message)
+                    processed_messages.append(processed_message)
 
-                filtered_sessions.append(processed_session)
+                # Include the session ID, date, and messages
+                processed_sessions.append({
+                    'session_id': session_id,
+                    'session_date': session_date,
+                    'messages': processed_messages
+                })
 
-        # Create the processed item (without haystack_dates and haystack_session_ids)
+        # Create the processed item
         processed_item = {
             'question_id': item['question_id'],
             'question_type': item['question_type'],
@@ -86,7 +94,7 @@ def add_has_answer_annotations(data: List[Dict[str, Any]]) -> List[Dict[str, Any
             'question_date': item['question_date'],
             'answer': item['answer'],
             'answer_session_ids': item['answer_session_ids'],
-            'haystack_sessions': filtered_sessions
+            'haystack_sessions': processed_sessions
         }
 
         processed_data.append(processed_item)

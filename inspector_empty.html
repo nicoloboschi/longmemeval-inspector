@@ -413,22 +413,29 @@
                     <div class="answer-section">
                         <div class="answer-label">Answer:</div>
                         <div class="answer-text">${escapeHtml(q.answer)}</div>
+                        <div style="margin-top: 10px; font-size: 13px;">
+                            <strong>Answer Session IDs:</strong> ${q.answer_session_ids.join(', ')}
+                        </div>
                     </div>
 
                     <div class="sessions-section">
                         <div class="sessions-header">
-                            <span>Haystack Sessions (${q.haystack_sessions.length})</span>
+                            <span>Answer Sessions (${q.haystack_sessions.length})</span>
                             ${q.haystack_sessions.length > 0 ?
                                 `<button class="toggle-session" onclick="toggleAllSessions(${startIndex + index})">
                                     Toggle All
                                 </button>` : ''}
                         </div>
                         ${q.haystack_sessions.map((session, sessionIndex) => {
-                            const hasAnswerMessages = session.filter(m => m.has_answer).length;
+                            const hasAnswerMessages = session.messages.filter(m => m.has_answer).length;
                             return `
                             <div class="session">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                                    <strong>Session ${sessionIndex + 1} (${hasAnswerMessages} with answer / ${session.length} total)</strong>
+                                    <div>
+                                        <strong>Session ID: ${session.session_id}</strong>
+                                        ${session.session_date ? `<span style="color: #666; margin-left: 10px; font-weight: normal;">📅 ${session.session_date}</span>` : ''}
+                                        <div style="font-size: 13px; color: #666; margin-top: 4px;">${hasAnswerMessages} with answer / ${session.messages.length} total messages</div>
+                                    </div>
                                     <div>
                                         <button class="show-full-conv" onclick="toggleFullConversation(event, ${startIndex + index}, ${sessionIndex})">
                                             Show Full Conv
@@ -439,7 +446,7 @@
                                     </div>
                                 </div>
                                 <div class="session-content" id="session-${startIndex + index}-${sessionIndex}">
-                                    ${session.map(message => `
+                                    ${session.messages.map(message => `
                                         <div class="message message-${message.role} ${!message.has_answer ? 'hidden' : ''}" data-has-answer="${message.has_answer}">
                                             <div class="message-role">
                                                 ${message.role}
